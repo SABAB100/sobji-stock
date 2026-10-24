@@ -110,13 +110,39 @@ are missing. Add them under **Project → Settings → Environment Variables**
 and redeploy. Every API route returns this same clear message when the
 variables are absent, instead of a cryptic failure.
 
-## Important limitation: no login
+## Password protection: one shared password
 
-Anyone with the link can **view and change** the stock — there is no
-sign-in in this version. That matches the "shared with everyone who has
-this link" model. Only share the link with people you trust with the stock.
-If you later need restricted editing, add Vercel Authentication or a simple
-shared password in front of the write routes.
+The app is protected by **one shared password** for everyone. The shop
+owner chooses the password, tells it to employees, and everyone opening
+the link types the same password before any stock is shown. The password
+is kept for the browser tab only (sessionStorage) and sent as an
+`x-app-password` header on every API call.
+
+**Set it up (required — the app refuses all access until this is done):**
+
+1. In the Vercel dashboard, open your project → **Settings →
+   Environment Variables**.
+2. Add a variable named **`APP_PASSWORD`** with the password you choose
+   (any value; keep it private and share it only with people you trust).
+3. Go to **Deployments** → latest deployment → **⋯ → Redeploy** so the
+   functions pick up the new variable.
+
+How it fails, by design (fail closed):
+
+- `APP_PASSWORD` not set at all → every API call returns **401 with a
+  "password not configured" message**. There is no open-access fallback.
+- Wrong password → **401 "Unauthorized"**, with no hint about the correct
+  value.
+- On any 401 the frontend shows the login screen again.
+
+The password value never appears in the code, the frontend, the logs, or
+any API response — it lives only in that environment variable.
+
+## If the API reports a password error
+
+If you see *"App password is not configured…"*, the `APP_PASSWORD`
+variable is missing. Add it under **Project → Settings → Environment
+Variables** (as above) and redeploy.
 
 ## Files
 
@@ -129,5 +155,6 @@ shared password in front of the write routes.
 | `api/restock.js` | Add stock |
 | `api/sales.js` | Sales history |
 | `api/_lib/store.js` | Upstash REST client (env vars only, no hardcoded credentials) |
+| `api/_lib/auth.js` | Shared-password gate: verifies `x-app-password` against `APP_PASSWORD` (fail closed) |
 | `api/_lib/http.js` | Request/response + exact gram/piece math helpers |
-| `.env.example` | The two environment variable names (no real values) |
+| `.env.example` | The environment variable names (no real values) |

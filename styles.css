@@ -18,6 +18,27 @@ h2 { margin: 24px 0 10px; }
 .muted { color: #666; }
 .hidden { display: none !important; }
 
+/* Password gate: full-screen login card shown before any stock. */
+.login-screen {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+  background: #f4f7f2;
+}
+.login-card {
+  background: #fff;
+  width: 100%;
+  max-width: 400px;
+  border-radius: 14px;
+  padding: 24px;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.08);
+}
+.login-card h1 { margin: 0 0 8px; font-size: 26px; }
+.login-card .field input { font-size: 16px; }
+.login-btn { width: 100%; padding: 12px; font-size: 17px; }
+
 .btn {
   border: 1px solid #c8d6c8;
   background: #fff;

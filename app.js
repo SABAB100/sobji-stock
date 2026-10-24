@@ -36,13 +36,62 @@
     el.textContent = msg;
   }
 
+  // ---------- password gate ----------
+  // The password is kept for the browser tab only (sessionStorage) and
+  // sent as the x-app-password header on every API call. It is never
+  // stored anywhere else and never appears in the page itself.
+
+  function getPassword() {
+    try { return sessionStorage.getItem('appPassword') || ''; }
+    catch (e) { return ''; }
+  }
+  function setPassword(pw) {
+    try { sessionStorage.setItem('appPassword', pw); } catch (e) { /* ignore */ }
+  }
+  function clearPassword() {
+    try { sessionStorage.removeItem('appPassword'); } catch (e) { /* ignore */ }
+  }
+
+  function showLogin(message) {
+    $('loginScreen').classList.remove('hidden');
+    $('appMain').classList.add('hidden');
+    var err = $('loginError');
+    if (message) { err.textContent = message; err.classList.remove('hidden'); }
+    else { err.classList.add('hidden'); err.textContent = ''; }
+    $('loginPassword').focus();
+  }
+  function hideLogin() {
+    $('loginScreen').classList.add('hidden');
+    $('appMain').classList.remove('hidden');
+  }
+
+  async function tryLogin() {
+    var pw = $('loginPassword').value;
+    if (!pw) { showLogin('Please enter the password.'); return; }
+    setPassword(pw);
+    $('loginPassword').value = '';
+    hideLogin();
+    await load();
+  }
+
   async function api(path, method, body) {
-    var opts = { method: method || 'GET', headers: { 'Content-Type': 'application/json' } };
+    var opts = {
+      method: method || 'GET',
+      headers: { 'Content-Type': 'application/json', 'x-app-password': getPassword() },
+    };
     if (body !== undefined) opts.body = JSON.stringify(body);
     var res = await fetch(path, opts);
     var data = {};
     try { data = await res.json(); } catch (e) { /* keep {} */ }
-    if (!res.ok) throw new Error(data.error || ('Request failed (' + res.status + ')'));
+    if (!res.ok) {
+      var err = new Error(data.error || ('Request failed (' + res.status + ')'));
+      err.status = res.status;
+      if (res.status === 401) {
+        clearPassword();
+        showLogin(data.notConfigured ? data.error : 'Wrong password. Please try again.');
+      }
+      throw err;
+    }
     return data;
   }
 
@@ -168,6 +217,7 @@
       await modalConfirmHandler();
       closeModal();
     } catch (err) {
+      if (err.status === 401) { closeModal(); return; }
       var el = $('modalError');
       el.textContent = err.message;
       el.classList.remove('hidden');
@@ -316,7 +366,7 @@
       await api('/api/items/' + encodeURIComponent(item.id), 'DELETE');
       await load();
     } catch (err) {
-      showError(err.message);
+      if (err.status !== 401) showError(err.message);
     }
   }
 
@@ -387,6 +437,7 @@
   // ---------- load ----------
 
   async function load() {
+    if (!getPassword()) { showLogin(); return; }
     try {
       showError('');
       var itemsData = await api('/api/items');
@@ -399,6 +450,7 @@
       }
       render();
     } catch (err) {
+      if (err.status === 401) { render(); return; } // login screen already shown
       showError(err.message);
       render();
     }
@@ -406,7 +458,11 @@
 
   $('addBtn').addEventListener('click', openAdd);
   $('refreshBtn').addEventListener('click', load);
+  $('loginBtn').addEventListener('click', tryLogin);
+  $('loginPassword').addEventListener('keydown', function (e) {
+    if (e.key === 'Enter') tryLogin();
+  });
 
-  load();
-  setInterval(load, 30000); // keep the board fresh for everyone viewing it
+  if (getPassword()) { hideLogin(); load(); } else { showLogin(); }
+  setInterval(function () { if (getPassword()) load(); }, 30000); // keep the board fresh
 })();

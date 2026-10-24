@@ -7,6 +7,24 @@
   <link rel="stylesheet" href="styles.css" />
 </head>
 <body>
+  <!-- Password gate: shown until a correct password is entered. The
+       password itself is never stored here — it lives only in the
+       server-side APP_PASSWORD environment variable. -->
+  <div id="loginScreen" class="login-screen">
+    <div class="login-card">
+      <h1>🥬 Vegetable Stock</h1>
+      <p class="muted">Enter the shop password to see the stock.</p>
+      <div class="field">
+        <label for="loginPassword">Password</label>
+        <input id="loginPassword" type="password" autocomplete="current-password"
+          placeholder="Shop password" />
+      </div>
+      <p id="loginError" class="error hidden"></p>
+      <button id="loginBtn" class="btn primary login-btn">Open stock</button>
+    </div>
+  </div>
+
+  <div id="appMain" class="hidden">
   <header class="top">
     <h1>🥬 Vegetable Stock</h1>
     <p class="subtitle">Live stock — everyone opening this link sees the same stock.</p>
@@ -53,6 +71,7 @@
       <p id="modalError" class="error hidden"></p>
     </div>
   </div>
+  </div><!-- /#appMain -->
 
   <script src="app.js"></script>
 </body>
