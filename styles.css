@@ -6,12 +6,24 @@ body {
   color: #1c2b1a;
 }
 .top {
-  background: #2e7d32;
+  background: linear-gradient(135deg, #1b5e20 0%, #2e7d32 55%, #43a047 100%);
   color: #fff;
-  padding: 20px 16px;
+  padding: 30px 16px 26px;
+  border-bottom: 4px solid #ffca28;
+  border-radius: 0 0 22px 22px;
+  box-shadow: 0 4px 14px rgba(27, 94, 32, 0.35);
 }
-.top h1 { margin: 0 0 4px; font-size: 28px; }
-.subtitle { margin: 0 0 14px; opacity: 0.9; }
+.top h1 {
+  margin: 0 0 6px;
+  font-size: 38px;
+  font-weight: 800;
+  letter-spacing: -0.5px;
+  text-shadow: 0 2px 6px rgba(0, 0, 0, 0.25);
+}
+.top h1, .top .subtitle, .top .top-actions { max-width: 900px; margin-left: auto; margin-right: auto; }
+.top .subtitle { font-size: 17px; opacity: 0.95; }
+.top .btn.primary { background: #fff; color: #1b5e20; border-color: #fff; font-weight: 700; }
+.top .btn { background: rgba(255, 255, 255, 0.15); color: #fff; border-color: rgba(255, 255, 255, 0.55); }
 .top-actions { display: flex; gap: 8px; flex-wrap: wrap; }
 main { max-width: 900px; margin: 0 auto; padding: 16px; }
 h2 { margin: 24px 0 10px; }
@@ -50,6 +62,7 @@ h2 { margin: 24px 0 10px; }
 }
 .btn.primary { background: #2e7d32; color: #fff; border-color: #2e7d32; }
 .btn.danger { background: #c62828; color: #fff; border-color: #c62828; }
+.btn.sale-del { padding: 2px 9px; font-size: 18px; line-height: 1.2; margin-left: 8px; }
 .btn:disabled { opacity: 0.5; cursor: default; }
 
 .banner {

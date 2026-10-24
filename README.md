@@ -16,7 +16,10 @@ Price is secondary and optional — remaining stock is the star of every card.
   price (when a price is set) and the big **"Left after this sale"** figure
   before confirming, and blocks any sale larger than the remaining stock.
 - **Stock added (restock)** flow with the same kg/gram switch.
-- **Sales history** list.
+- **Sales history** list — each entry has a × button to delete it. Deleting
+  a sale adds the sold quantity back to that vegetable's stock, so the
+  books stay correct. (If the vegetable no longer exists, or an old
+  entry's quantity cannot be worked out, only the record is deleted.)
 - **"How much is left" summary panel** at the top, lowest stock first, with
   warning colors for low stock (at or below 5 kg / 5 pieces) and finished (0).
 - **Edit and delete** for vegetables.
@@ -153,7 +156,7 @@ Variables** (as above) and redeploy.
 | `api/items/[id].js` | Edit / delete one vegetable |
 | `api/sell.js` | Record a sale, deduct stock, log it |
 | `api/restock.js` | Add stock |
-| `api/sales.js` | Sales history |
+| `api/sales.js` | Sales history: GET list, DELETE one sale (restores its quantity to stock) |
 | `api/_lib/store.js` | Upstash REST client (env vars only, no hardcoded credentials) |
 | `api/_lib/auth.js` | Shared-password gate: verifies `x-app-password` against `APP_PASSWORD` (fail closed) |
 | `api/_lib/http.js` | Request/response + exact gram/piece math helpers |

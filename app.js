@@ -179,8 +179,31 @@
       var price = (s.totalPrice !== null && s.totalPrice !== undefined)
         ? ' — ' + money(s.totalPrice) : '';
       return '<li><span>' + esc(s.itemName) + ' — sold ' + esc(s.qtyText) + price +
-        '</span><span class="muted">' + esc(when) + '</span></li>';
+        '</span><span><span class="muted">' + esc(when) + '</span> ' +
+        '<button class="btn danger sale-del" data-sale-id="' + esc(s.id) +
+        '" title="Delete this sale">×</button></span></li>';
     }).join('');
+    list.querySelectorAll('[data-sale-id]').forEach(function (btn) {
+      btn.addEventListener('click', function () {
+        var sale = state.sales.find(function (x) { return x.id === btn.dataset.saleId; });
+        if (sale) deleteSale(sale);
+      });
+    });
+  }
+
+  async function deleteSale(sale) {
+    if (!window.confirm('Delete this sale of ' + sale.itemName + ' (' + sale.qtyText +
+      ')? The sold quantity will be added back to its stock.')) return;
+    try {
+      var result = await api('/api/sales', 'DELETE', { id: sale.id });
+      await load();
+      if (!result.stockRestored) {
+        showError('Sale deleted, but its quantity could not be added back to stock ' +
+          '(the vegetable may no longer exist).');
+      }
+    } catch (err) {
+      if (err.status !== 401) showError(err.message);
+    }
   }
 
   function esc(s) {
