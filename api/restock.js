@@ -2,6 +2,7 @@
 //   Body: { id, qty, qtyUnit: "kg" | "g" | "piece" }
 //   Uses the same exact gram math as sales: 1000 g = 1 kg.
 const { redis } = require('./_lib/store');
+const { requireAuth } = require('./_lib/auth');
 const {
   send,
   sendError,
@@ -14,6 +15,7 @@ const {
 
 module.exports = async (req, res) => {
   try {
+    if (!requireAuth(req, res)) return;
     if (req.method !== 'POST') {
       res.setHeader('Allow', 'POST');
       return send(res, 405, { error: 'Method not allowed' });

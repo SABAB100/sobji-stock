@@ -3,6 +3,7 @@
 //   Body: { name, unit: "kg" | "piece", qty, qtyUnit: "kg" | "g" | "piece",
 //           price?: number | null }  (price is per kg or per piece, optional)
 const { redis, hgetallToObject } = require('./_lib/store');
+const { requireAuth } = require('./_lib/auth');
 const {
   send,
   sendError,
@@ -28,6 +29,7 @@ async function listItems() {
 
 module.exports = async (req, res) => {
   try {
+    if (!requireAuth(req, res)) return;
     if (req.method === 'GET') {
       return send(res, 200, { items: await listItems() });
     }

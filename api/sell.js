@@ -5,6 +5,7 @@
 //   - A sale larger than the remaining stock is rejected (400).
 //   - The sale is appended to the sales history.
 const { redis } = require('./_lib/store');
+const { requireAuth } = require('./_lib/auth');
 const {
   send,
   sendError,
@@ -17,6 +18,7 @@ const {
 
 module.exports = async (req, res) => {
   try {
+    if (!requireAuth(req, res)) return;
     if (req.method !== 'POST') {
       res.setHeader('Allow', 'POST');
       return send(res, 405, { error: 'Method not allowed' });
