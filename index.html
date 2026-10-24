@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Vegetable Stock</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <header class="top">
+    <h1>🥬 Vegetable Stock</h1>
+    <p class="subtitle">Live stock — everyone opening this link sees the same stock.</p>
+    <div class="top-actions">
+      <button id="addBtn" class="btn primary">+ Add vegetable</button>
+      <button id="refreshBtn" class="btn">Refresh</button>
+    </div>
+  </header>
+
+  <main>
+    <div id="errorBanner" class="banner hidden"></div>
+
+    <section class="panel" id="summaryPanel">
+      <h2>How much is left</h2>
+      <p id="summaryEmpty" class="muted">No vegetables yet.</p>
+      <ul id="summaryList" class="summary-list"></ul>
+    </section>
+
+    <section>
+      <div class="section-head">
+        <h2>Vegetables</h2>
+        <span id="itemCount" class="muted"></span>
+      </div>
+      <p id="listEmpty" class="muted">No vegetables yet — add your first one above.</p>
+      <div id="cards" class="cards"></div>
+    </section>
+
+    <section>
+      <h2>Sales history</h2>
+      <p id="salesEmpty" class="muted">No sales yet.</p>
+      <ul id="salesList" class="sales-list"></ul>
+    </section>
+  </main>
+
+  <!-- One modal reused for Add, Edit, Sold and Stock added -->
+  <div id="modalBackdrop" class="backdrop hidden">
+    <div class="modal" role="dialog" aria-modal="true">
+      <h3 id="modalTitle"></h3>
+      <div id="modalBody"></div>
+      <div class="modal-actions">
+        <button id="modalCancel" class="btn">Cancel</button>
+        <button id="modalConfirm" class="btn primary">Confirm</button>
+      </div>
+      <p id="modalError" class="error hidden"></p>
+    </div>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>
