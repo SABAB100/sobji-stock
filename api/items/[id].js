@@ -2,6 +2,7 @@
 // DELETE /api/items/:id -> delete a vegetable
 // Vercel maps this file to /api/items/<id> and puts <id> in req.query.id.
 const { redis, hgetallToObject } = require('../_lib/store');
+const { requireAuth } = require('../_lib/auth');
 const {
   send,
   sendError,
@@ -19,6 +20,7 @@ async function loadItem(id) {
 
 module.exports = async (req, res) => {
   try {
+    if (!requireAuth(req, res)) return;
     const id = req.query && req.query.id;
     if (!id || Array.isArray(id)) throw badRequest('Missing item id.');
     const item = await loadItem(id);
