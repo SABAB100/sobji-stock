@@ -53,6 +53,11 @@ module.exports = async (req, res) => {
       id: `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
       itemId: item.id,
       itemName: item.name,
+      // Exact sold amount in minor units (grams for kg items, pieces for
+      // piece items). Stored so deleting this sale later can restore the
+      // exact quantity to stock. Older entries lack it and fall back to
+      // parsing qtyText in api/sales.js.
+      amount,
       qtyText:
         item.unit === 'kg'
           ? body.qtyUnit === 'kg'
