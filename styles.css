@@ -181,3 +181,6 @@ h2 { margin: 24px 0 10px; }
 }
 .preview .left-after { font-size: 30px; font-weight: 800; color: #2e7d32; }
 .preview .left-after.bad { color: #c62828; }
+
+/* Footer credit, nicely placed at the bottom of the app. */
+.app-footer { text-align: center; color: #2e7d32; font-size: 15px; font-weight: 600; padding: 20px 16px 32px; border-top: 1px solid #dbe7db; margin-top: 12px; }
