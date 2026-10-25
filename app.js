@@ -116,7 +116,7 @@
     list.innerHTML = sorted.map(function (it) {
       var cls = isFinished(it) ? 'warn-out' : (isLow(it) ? 'warn-low' : '');
       var note = isFinished(it) ? 'Finished' : (isLow(it) ? 'Low stock!' : '');
-      return '<li><span>' + esc(it.name) + '</span><span class="' + cls + '">' +
+      return '<li><span class="summary-name">' + esc(it.name) + '</span><span class="' + cls + '">' +
         esc(formatMinor(it)) + (note ? ' — ' + note : '') + '</span></li>';
     }).join('');
   }

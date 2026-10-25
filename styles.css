@@ -89,6 +89,10 @@ h2 { margin: 24px 0 10px; }
   border-bottom: 1px solid #eee;
 }
 .summary-list li:last-child, .sales-list li:last-child { border-bottom: none; }
+/* Product names under "How much is left": bigger, bolder and green so
+   they catch the eye at a glance. */
+.summary-name { font-size: 20px; font-weight: 700; color: #2e7d32; }
+.summary-list li { align-items: center; }
 .warn-low { color: #e65100; font-weight: 700; }
 .warn-out { color: #c62828; font-weight: 700; }
 
