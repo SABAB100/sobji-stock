@@ -116,7 +116,10 @@
     list.innerHTML = sorted.map(function (it) {
       var cls = isFinished(it) ? 'warn-out' : (isLow(it) ? 'warn-low' : '');
       var note = isFinished(it) ? 'Finished' : (isLow(it) ? 'Low stock!' : '');
-      return '<li><span class="summary-name">' + esc(it.name) + '</span><span class="' + cls + '">' +
+      var priceLine = (it.price !== null && it.price !== undefined)
+        ? '<span class="summary-price">' + money(it.price) + (it.unit === 'kg' ? ' / kg' : ' / pc') + '</span>'
+        : '';
+      return '<li><span class="summary-left"><span class="summary-name">' + esc(it.name) + '</span>' + priceLine + '</span><span class="' + cls + '">' +
         esc(formatMinor(it)) + (note ? ' — ' + note : '') + '</span></li>';
     }).join('');
   }

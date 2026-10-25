@@ -79,6 +79,8 @@ h2 { margin: 24px 0 10px; }
 /* Product names under "How much is left": bigger, bolder and green so
    they catch the eye at a glance. */
 .summary-name { font-size: 20px; font-weight: 700; color: #2e7d32; }
+.summary-left { display: flex; flex-direction: column; }
+.summary-price { font-size: 14px; color: #888; }
 .summary-list li { align-items: center; }
 .warn-low { color: #e65100; font-weight: 700; }
 .warn-out { color: #c62828; font-weight: 700; }
