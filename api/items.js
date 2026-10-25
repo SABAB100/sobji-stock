@@ -1,9 +1,13 @@
-// GET /api/items  -> list all vegetables
+// GET /api/items  -> list all vegetables (starts a fresh day first:
+//   if the stored stock day is older than today in Bangladesh time,
+//   yesterday's items are cleared and today starts empty; sales
+//   history is kept)
 // POST /api/items -> add a vegetable
 //   Body: { name, unit: "kg" | "piece", qty, qtyUnit: "kg" | "g" | "piece",
 //           price?: number | null }  (price is per kg or per piece, optional)
 const { redis, hgetallToObject } = require('./_lib/store');
 const { requireAuth } = require('./_lib/auth');
+const { ensureCurrentDay } = require('./_lib/day');
 const {
   send,
   sendError,
@@ -31,6 +35,7 @@ module.exports = async (req, res) => {
   try {
     if (!requireAuth(req, res)) return;
     if (req.method === 'GET') {
+      await ensureCurrentDay();
       return send(res, 200, { items: await listItems() });
     }
     if (req.method === 'POST') {
