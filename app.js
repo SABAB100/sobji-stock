@@ -3,7 +3,7 @@
 (function () {
   'use strict';
 
-  var state = { items: [], sales: [], month: '' };
+  var state = { items: [], sales: [], date: '', month: '', year: '' };
 
   function $(id) { return document.getElementById(id); }
 
@@ -171,14 +171,38 @@
     return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0');
   }
 
+  function dateOf(dateStr) {
+    var d = new Date(dateStr);
+    if (isNaN(d.getTime())) return null;
+    return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') +
+      '-' + String(d.getDate()).padStart(2, '0');
+  }
+
+  function yearOf(dateStr) {
+    var d = new Date(dateStr);
+    if (isNaN(d.getTime())) return null;
+    return String(d.getFullYear());
+  }
+
   function renderSales() {
     var list = $('salesList');
     var empty = $('salesEmpty');
-    var shown = state.month
-      ? state.sales.filter(function (s) { return monthOf(s.at) === state.month; })
-      : state.sales;
+    // One filter is active at a time: an exact date wins over a month,
+    // and a month wins over a whole year.
+    var shown = state.sales;
+    var emptyText = 'No sales yet.';
+    if (state.date) {
+      shown = state.sales.filter(function (s) { return dateOf(s.at) === state.date; });
+      emptyText = 'No sales on this date.';
+    } else if (state.month) {
+      shown = state.sales.filter(function (s) { return monthOf(s.at) === state.month; });
+      emptyText = 'No sales in this month.';
+    } else if (state.year) {
+      shown = state.sales.filter(function (s) { return yearOf(s.at) === state.year; });
+      emptyText = 'No sales in this year.';
+    }
     if (!shown.length) {
-      empty.textContent = state.month ? 'No sales in this month.' : 'No sales yet.';
+      empty.textContent = emptyText;
       empty.classList.remove('hidden');
       list.innerHTML = '';
       return;
@@ -492,21 +516,61 @@
   $('addBtn').addEventListener('click', openAdd);
   $('refreshBtn').addEventListener('click', load);
   $('salesRefreshBtn').addEventListener('click', load);
+  // The three filters are single-active: picking one clears the others,
+  // so the list never mixes two different selections.
+  function clearFilters() {
+    state.date = '';
+    state.month = '';
+    state.year = '';
+    $('dateFilter').value = '';
+    $('monthFilter').value = '';
+    $('yearFilter').value = '';
+  }
+  $('dateFilter').addEventListener('change', function () {
+    clearFilters();
+    state.date = $('dateFilter').value;
+    renderSales();
+  });
   $('monthFilter').addEventListener('change', function () {
+    clearFilters();
     state.month = $('monthFilter').value;
     renderSales();
   });
+  $('yearFilter').addEventListener('change', function () {
+    clearFilters();
+    state.year = $('yearFilter').value;
+    renderSales();
+  });
   $('monthClear').addEventListener('click', function () {
-    state.month = '';
-    $('monthFilter').value = '';
+    clearFilters();
     renderSales();
   });
   $('monthThis').addEventListener('click', function () {
+    clearFilters();
     var now = new Date();
     state.month = now.getFullYear() + '-' + String(now.getMonth() + 1).padStart(2, '0');
     $('monthFilter').value = state.month;
     renderSales();
   });
+  $('dateToday').addEventListener('click', function () {
+    clearFilters();
+    var now = new Date();
+    state.date = now.getFullYear() + '-' + String(now.getMonth() + 1).padStart(2, '0') +
+      '-' + String(now.getDate()).padStart(2, '0');
+    $('dateFilter').value = state.date;
+    renderSales();
+  });
+  // Fill the year dropdown (2024 through next year).
+  (function fillYears() {
+    var sel = $('yearFilter');
+    var thisYear = new Date().getFullYear();
+    for (var y = 2024; y <= thisYear + 1; y++) {
+      var opt = document.createElement('option');
+      opt.value = String(y);
+      opt.textContent = String(y);
+      sel.appendChild(opt);
+    }
+  })();
   $('loginBtn').addEventListener('click', tryLogin);
   $('loginPassword').addEventListener('keydown', function (e) {
     if (e.key === 'Enter') tryLogin();

@@ -181,5 +181,5 @@ h2 { margin: 24px 0 10px; }
 /* Sales history month filter (Month picker + Clear / This month / Refresh). */
 .filter-row { display: flex; gap: 12px; align-items: flex-end; flex-wrap: wrap; margin-bottom: 10px; }
 .filter-row .field { margin-bottom: 0; }
-.filter-row .field input { width: auto; }
+.filter-row .field input, .filter-row .field select { width: auto; }
 .link-btn { background: none; border: none; color: #2e7d32; cursor: pointer; font-size: 15px; padding: 10px 4px; text-decoration: underline; }
