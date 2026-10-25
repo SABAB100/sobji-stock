@@ -3,7 +3,7 @@
 (function () {
   'use strict';
 
-  var state = { items: [], sales: [] };
+  var state = { items: [], sales: [], month: '' };
 
   function $(id) { return document.getElementById(id); }
 
@@ -165,16 +165,26 @@
     });
   }
 
+  function monthOf(dateStr) {
+    var d = new Date(dateStr);
+    if (isNaN(d.getTime())) return null;
+    return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0');
+  }
+
   function renderSales() {
     var list = $('salesList');
     var empty = $('salesEmpty');
-    if (!state.sales.length) {
+    var shown = state.month
+      ? state.sales.filter(function (s) { return monthOf(s.at) === state.month; })
+      : state.sales;
+    if (!shown.length) {
+      empty.textContent = state.month ? 'No sales in this month.' : 'No sales yet.';
       empty.classList.remove('hidden');
       list.innerHTML = '';
       return;
     }
     empty.classList.add('hidden');
-    list.innerHTML = state.sales.map(function (s) {
+    list.innerHTML = shown.map(function (s) {
       var when = new Date(s.at).toLocaleString();
       var price = (s.totalPrice !== null && s.totalPrice !== undefined)
         ? ' — ' + money(s.totalPrice) : '';
@@ -466,7 +476,7 @@
       var itemsData = await api('/api/items');
       state.items = itemsData.items || [];
       try {
-        var salesData = await api('/api/sales');
+        var salesData = await api('/api/sales?all=1');
         state.sales = salesData.sales || [];
       } catch (e) {
         state.sales = [];
@@ -481,6 +491,22 @@
 
   $('addBtn').addEventListener('click', openAdd);
   $('refreshBtn').addEventListener('click', load);
+  $('salesRefreshBtn').addEventListener('click', load);
+  $('monthFilter').addEventListener('change', function () {
+    state.month = $('monthFilter').value;
+    renderSales();
+  });
+  $('monthClear').addEventListener('click', function () {
+    state.month = '';
+    $('monthFilter').value = '';
+    renderSales();
+  });
+  $('monthThis').addEventListener('click', function () {
+    var now = new Date();
+    state.month = now.getFullYear() + '-' + String(now.getMonth() + 1).padStart(2, '0');
+    $('monthFilter').value = state.month;
+    renderSales();
+  });
   $('loginBtn').addEventListener('click', tryLogin);
   $('loginPassword').addEventListener('keydown', function (e) {
     if (e.key === 'Enter') tryLogin();
