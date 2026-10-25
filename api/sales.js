@@ -1,6 +1,5 @@
 // /api/sales
-//   GET    -> recent sales, newest first (max 100, or all with ?all=1
-//             so the frontend month filter can look back at older months).
+//   GET    -> recent sales, newest first (max 100).
 //   DELETE -> delete one sale by id (body: { id }) and add the sold
 //             quantity back to that vegetable's stock, so the books
 //             stay correct. The history entry is removed from the Redis
@@ -79,13 +78,7 @@ module.exports = async (req, res) => {
   try {
     if (!requireAuth(req, res)) return;
     if (req.method === 'GET') {
-      // ?all=1 lifts the 100-entry cap so the month filter in the
-      // frontend can look back at older months too.
-      let all = false;
-      try {
-        all = new URL(req.url, 'http://localhost').searchParams.get('all') === '1';
-      } catch (_) { /* keep default */ }
-      const raw = await redis('LRANGE', 'sales', 0, all ? -1 : 99);
+      const raw = await redis('LRANGE', 'sales', 0, 99);
       const sales = (Array.isArray(raw) ? raw : [])
         .map((v) => {
           try {
