@@ -12,6 +12,7 @@ body {
 .top-plain h1, .top-plain .subtitle, .top-plain .top-actions { max-width: 900px; margin-left: auto; margin-right: auto; }
 .top-plain .subtitle { font-size: 17px; color: #666; }
 .top-actions { display: flex; gap: 8px; flex-wrap: wrap; }
+.search-input { flex: 1 1 220px; border: 1px solid #c8d6c8; border-radius: 10px; padding: 10px 16px; font-size: 16px; background: #fff; color: #1c2b1a; }
 main { max-width: 900px; margin: 0 auto; padding: 16px; }
 h2 { margin: 24px 0 10px; }
 .muted { color: #666; }

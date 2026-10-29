@@ -4,6 +4,11 @@
   'use strict';
 
   var state = { items: [], sales: [] };
+  var searchQuery = '';
+  function visibleItems() {
+    if (!searchQuery) return state.items;
+    return state.items.filter(function (it) { return it.name.toLowerCase().indexOf(searchQuery) !== -1; });
+  }
 
   function $(id) { return document.getElementById(id); }
 
@@ -106,8 +111,9 @@
   function renderSummary() {
     var list = $('summaryList');
     var empty = $('summaryEmpty');
-    var sorted = state.items.slice().sort(function (a, b) { return a.stock - b.stock; });
+    var sorted = visibleItems().slice().sort(function (a, b) { return a.stock - b.stock; });
     if (!sorted.length) {
+      empty.textContent = searchQuery ? 'No vegetables match your search.' : 'No vegetables yet.';
       empty.classList.remove('hidden');
       list.innerHTML = '';
       return;
@@ -130,13 +136,15 @@
     $('itemCount').textContent = state.items.length
       ? state.items.length + (state.items.length === 1 ? ' vegetable' : ' vegetables')
       : '';
-    if (!state.items.length) {
+    var visible = visibleItems();
+    if (!visible.length) {
+      empty.textContent = searchQuery ? 'No vegetables match your search.' : 'No vegetables yet — add your first one above.';
       empty.classList.remove('hidden');
       wrap.innerHTML = '';
       return;
     }
     empty.classList.add('hidden');
-    wrap.innerHTML = state.items.map(function (it) {
+    wrap.innerHTML = visible.map(function (it) {
       var cls = isFinished(it) ? 'out' : (isLow(it) ? 'low' : '');
       var badge = isFinished(it)
         ? '<div class="warn-out">Finished — nothing left</div>'
@@ -484,6 +492,7 @@
 
   $('addBtn').addEventListener('click', openAdd);
   $('refreshBtn').addEventListener('click', load);
+  $('searchInput').addEventListener('input', function (e) { searchQuery = e.target.value.trim().toLowerCase(); render(); });
   $('loginBtn').addEventListener('click', tryLogin);
   $('loginPassword').addEventListener('keydown', function (e) {
     if (e.key === 'Enter') tryLogin();
