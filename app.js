@@ -119,7 +119,7 @@
       var priceLine = (it.price !== null && it.price !== undefined)
         ? '<span class="summary-price">' + money(it.price) + (it.unit === 'kg' ? ' / kg' : ' / pc') + '</span>'
         : '';
-      return '<li><span class="summary-left"><span class="summary-name">' + esc(it.name) + '</span>' + priceLine + '</span><span class="' + cls + '">' +
+      return '<li><span class="summary-left"><span class="summary-name">' + esc(it.name) + '</span>' + priceLine + '</span><span class="summary-dots"></span><span class="' + cls + '">' +
         esc(formatMinor(it)) + (note ? ' — ' + note : '') + '</span></li>';
     }).join('');
   }
