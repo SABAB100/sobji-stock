@@ -81,7 +81,7 @@ h2 { margin: 24px 0 10px; }
 .summary-name { font-size: 20px; font-weight: 700; color: #2e7d32; }
 .summary-left { display: flex; flex-direction: column; }
 .summary-price { font-size: 14px; color: #888; }
-.summary-list li { align-items: center; }
+.summary-list li { align-items: center; justify-content: flex-start; }
 .warn-low { color: #e65100; font-weight: 700; }
 .warn-out { color: #c62828; font-weight: 700; }
 
