@@ -104,6 +104,7 @@
 
   function render() {
     renderSummary();
+    renderSold();
     renderCards();
     renderSales();
   }
@@ -127,6 +128,69 @@
         : '';
       return '<li><span class="summary-left"><span class="summary-name">' + esc(it.name) + '</span>' + priceLine + '</span><span class="summary-dots"></span><span class="' + cls + '">' +
         esc(formatMinor(it)) + (note ? ' — ' + note : '') + '</span></li>';
+    }).join('');
+  }
+
+  // Parse an old-format sale's qtyText into minor units (grams / pieces).
+  // Returns null when the text cannot be parsed. Same rule as api/sales.js.
+  function parseQtyText(qtyText) {
+    if (typeof qtyText !== 'string') return null;
+    var m = qtyText.trim().match(/^([\d.]+)\s*(kg|g|pcs?|pieces?)$/i);
+    if (!m) return null;
+    var n = Number(m[1]);
+    if (!Number.isFinite(n) || n <= 0) return null;
+    var unit = m[2].toLowerCase();
+    if (unit === 'kg') return Math.round(n * 1000);
+    return Math.round(n); // 'g' -> grams as-is; 'pcs'/'pc' -> pieces as-is
+  }
+
+  function soldAmountOf(sale) {
+    if (typeof sale.amount === 'number' && Number.isFinite(sale.amount) && sale.amount > 0) {
+      return Math.round(sale.amount);
+    }
+    return parseQtyText(sale.qtyText);
+  }
+
+  // "How much sold": total sold per vegetable, added up from the sales
+  // history. Same look as "How much is left", most sold first. Sales of
+  // vegetables that no longer exist stay in the history below but are
+  // not counted here. Read-only: it changes no stock, price or sale.
+  function renderSold() {
+    var list = $('soldList');
+    var empty = $('soldEmpty');
+    var totals = {};
+    state.sales.forEach(function (s) {
+      var amt = soldAmountOf(s);
+      if (amt === null) return;
+      var key = null;
+      if (s.itemId) {
+        key = s.itemId;
+      } else {
+        var byName = state.items.find(function (x) { return x.name === s.itemName; });
+        if (byName) key = byName.id;
+      }
+      if (!key) return;
+      totals[key] = (totals[key] || 0) + amt;
+    });
+    var items = visibleItems().slice();
+    if (!items.length) {
+      empty.textContent = searchQuery ? 'No vegetables match your search.' : 'No vegetables yet.';
+      empty.classList.remove('hidden');
+      list.innerHTML = '';
+      return;
+    }
+    if (!state.sales.length) {
+      empty.textContent = 'No sales yet.';
+      empty.classList.remove('hidden');
+      list.innerHTML = '';
+      return;
+    }
+    empty.classList.add('hidden');
+    items.sort(function (a, b) { return (totals[b.id] || 0) - (totals[a.id] || 0); });
+    list.innerHTML = items.map(function (it) {
+      var sold = totals[it.id] || 0;
+      return '<li><span class="summary-left"><span class="summary-name">' + esc(it.name) + '</span></span><span class="summary-dots"></span><span>' +
+        esc(formatMinor({ unit: it.unit, stock: sold })) + '</span></li>';
     }).join('');
   }
 
