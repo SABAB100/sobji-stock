@@ -8,6 +8,8 @@
   // several at once. Kept outside renderSales so a re-render (e.g. after
   // one sale is deleted) does not lose the selection.
   var selectedSaleIds = {};
+  // Same idea for the vegetable cards below.
+  var selectedItemIds = {};
   var searchQuery = '';
   function visibleItems() {
     if (!searchQuery) return state.items;
@@ -201,6 +203,7 @@
   function renderCards() {
     var wrap = $('cards');
     var empty = $('listEmpty');
+    var bulkBar = $('itemsBulkBar');
     $('itemCount').textContent = state.items.length
       ? state.items.length + (state.items.length === 1 ? ' vegetable' : ' vegetables')
       : '';
@@ -208,10 +211,12 @@
     if (!visible.length) {
       empty.textContent = searchQuery ? 'No vegetables match your search.' : 'No vegetables yet — add your first one above.';
       empty.classList.remove('hidden');
+      bulkBar.classList.add('hidden');
       wrap.innerHTML = '';
       return;
     }
     empty.classList.add('hidden');
+    bulkBar.classList.remove('hidden');
     wrap.innerHTML = visible.map(function (it) {
       var cls = isFinished(it) ? 'out' : (isLow(it) ? 'low' : '');
       var badge = isFinished(it)
@@ -220,8 +225,9 @@
       var priceLine = (it.price !== null && it.price !== undefined)
         ? '<div class="price-line">' + money(it.price) + (it.unit === 'kg' ? ' / kg' : ' / pc') + '</div>'
         : '';
+      var checked = selectedItemIds[it.id] ? ' checked' : '';
       return '<div class="card ' + cls + '">' +
-        '<h3>' + esc(it.name) + '</h3>' +
+        '<h3><input type="checkbox" class="item-check" data-id="' + esc(it.id) + '"' + checked + '> ' + esc(it.name) + '</h3>' +
         '<div class="left-label">Left now</div>' +
         '<div class="big-left ' + cls + '">' + esc(formatMinor(it)) + '</div>' +
         badge + priceLine +
@@ -232,6 +238,13 @@
           '<button class="btn danger" data-act="delete" data-id="' + it.id + '">Delete</button>' +
         '</div></div>';
     }).join('');
+    wrap.querySelectorAll('.item-check').forEach(function (box) {
+      box.addEventListener('change', function () {
+        if (box.checked) selectedItemIds[box.dataset.id] = true;
+        else delete selectedItemIds[box.dataset.id];
+        updateItemsBulkBar();
+      });
+    });
     wrap.querySelectorAll('[data-act]').forEach(function (btn) {
       btn.addEventListener('click', function () {
         var it = state.items.find(function (x) { return x.id === btn.dataset.id; });
@@ -242,6 +255,43 @@
         if (btn.dataset.act === 'delete') deleteItem(it);
       });
     });
+    updateItemsBulkBar();
+  }
+
+  // Refresh the vegetables bulk bar: how many are picked, and whether
+  // the "Select all" box should be ticked. Only ids that still exist
+  // count; "Select all" covers the vegetables currently shown.
+  function updateItemsBulkBar() {
+    var bar = $('itemsBulkBar');
+    if (!visibleItems().length) { bar.classList.add('hidden'); return; }
+    bar.classList.remove('hidden');
+    var picked = state.items.filter(function (it) { return selectedItemIds[it.id]; });
+    var visible = visibleItems();
+    var pickedVisible = visible.filter(function (it) { return selectedItemIds[it.id]; });
+    $('itemsSelectedCount').textContent = picked.length ? picked.length + ' selected' : '';
+    $('itemsDeleteSelected').disabled = picked.length === 0;
+    $('itemsSelectAll').checked = pickedVisible.length > 0 && pickedVisible.length === visible.length;
+  }
+
+  // Delete every picked vegetable, one by one through the same DELETE
+  // route the single Delete button uses. Their sales history stays,
+  // exactly as with a single delete.
+  async function deleteSelectedItems() {
+    var picked = state.items.filter(function (it) { return selectedItemIds[it.id]; });
+    if (!picked.length) return;
+    if (!window.confirm('Delete ' + picked.length + ' vegetables? Their sales history will stay.')) return;
+    var failed = 0;
+    for (var i = 0; i < picked.length; i++) {
+      try {
+        await api('/api/items/' + encodeURIComponent(picked[i].id), 'DELETE');
+        delete selectedItemIds[picked[i].id];
+      } catch (err) {
+        if (err.status === 401) { await load(); return; }
+        failed++;
+      }
+    }
+    await load();
+    if (failed) showError(failed + ' vegetable(s) could not be deleted. The rest were deleted.');
   }
 
   function renderSales() {
@@ -518,6 +568,7 @@
     if (!window.confirm('Delete ' + item.name + '? Its sales history will stay.')) return;
     try {
       await api('/api/items/' + encodeURIComponent(item.id), 'DELETE');
+      delete selectedItemIds[item.id];
       await load();
     } catch (err) {
       if (err.status !== 401) showError(err.message);
@@ -621,6 +672,15 @@
     renderSales();
   });
   $('salesDeleteSelected').addEventListener('click', deleteSelectedSales);
+  $('itemsSelectAll').addEventListener('change', function (e) {
+    if (e.target.checked) {
+      visibleItems().forEach(function (it) { selectedItemIds[it.id] = true; });
+    } else {
+      selectedItemIds = {};
+    }
+    renderCards();
+  });
+  $('itemsDeleteSelected').addEventListener('click', deleteSelectedItems);
   $('searchInput').addEventListener('input', function (e) { searchQuery = e.target.value.trim().toLowerCase(); render(); });
   $('loginBtn').addEventListener('click', tryLogin);
   $('loginPassword').addEventListener('keydown', function (e) {
