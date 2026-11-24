@@ -64,6 +64,11 @@
     <section>
       <h2>Sales history</h2>
       <p id="salesEmpty" class="muted">No sales yet.</p>
+      <div id="salesBulkBar" class="bulk-bar hidden">
+        <label class="bulk-select-all"><input type="checkbox" id="salesSelectAll"> Select all</label>
+        <span id="salesSelectedCount" class="muted"></span>
+        <button id="salesDeleteSelected" class="btn danger">Delete selected</button>
+      </div>
       <ul id="salesList" class="sales-list"></ul>
     </section>
   </main>

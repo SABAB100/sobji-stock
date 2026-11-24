@@ -4,6 +4,10 @@
   'use strict';
 
   var state = { items: [], sales: [] };
+  // Sales picked with the checkboxes in the sales history, for deleting
+  // several at once. Kept outside renderSales so a re-render (e.g. after
+  // one sale is deleted) does not lose the selection.
+  var selectedSaleIds = {};
   var searchQuery = '';
   function visibleItems() {
     if (!searchQuery) return state.items;
@@ -243,27 +247,78 @@
   function renderSales() {
     var list = $('salesList');
     var empty = $('salesEmpty');
+    var bulkBar = $('salesBulkBar');
     if (!state.sales.length) {
       empty.classList.remove('hidden');
+      bulkBar.classList.add('hidden');
       list.innerHTML = '';
       return;
     }
     empty.classList.add('hidden');
+    bulkBar.classList.remove('hidden');
     list.innerHTML = state.sales.map(function (s) {
       var when = new Date(s.at).toLocaleString();
       var price = (s.totalPrice !== null && s.totalPrice !== undefined)
         ? ' — ' + money(s.totalPrice) : '';
-      return '<li><span>' + esc(s.itemName) + ' — sold ' + esc(s.qtyText) + price +
+      var checked = selectedSaleIds[s.id] ? ' checked' : '';
+      return '<li><span><input type="checkbox" class="sale-check" data-sale-id="' + esc(s.id) + '"' + checked + '> ' +
+        esc(s.itemName) + ' — sold ' + esc(s.qtyText) + price +
         '</span><span><span class="muted">' + esc(when) + '</span> ' +
         '<button class="btn danger sale-del" data-sale-id="' + esc(s.id) +
         '" title="Delete this sale">×</button></span></li>';
     }).join('');
-    list.querySelectorAll('[data-sale-id]').forEach(function (btn) {
+    list.querySelectorAll('.sale-check').forEach(function (box) {
+      box.addEventListener('change', function () {
+        if (box.checked) selectedSaleIds[box.dataset.saleId] = true;
+        else delete selectedSaleIds[box.dataset.saleId];
+        updateSalesBulkBar();
+      });
+    });
+    list.querySelectorAll('.sale-del').forEach(function (btn) {
       btn.addEventListener('click', function () {
         var sale = state.sales.find(function (x) { return x.id === btn.dataset.saleId; });
         if (sale) deleteSale(sale);
       });
     });
+    updateSalesBulkBar();
+  }
+
+  // Refresh the bulk bar: how many sales are picked, and whether the
+  // "Select all" box should be ticked. Only ids that still exist count.
+  function updateSalesBulkBar() {
+    var bar = $('salesBulkBar');
+    if (!state.sales.length) { bar.classList.add('hidden'); return; }
+    bar.classList.remove('hidden');
+    var picked = state.sales.filter(function (s) { return selectedSaleIds[s.id]; });
+    $('salesSelectedCount').textContent = picked.length ? picked.length + ' selected' : '';
+    $('salesDeleteSelected').disabled = picked.length === 0;
+    $('salesSelectAll').checked = picked.length > 0 && picked.length === state.sales.length;
+  }
+
+  // Delete every picked sale, one by one through the same DELETE route
+  // the single × button uses, so each quantity is added back to stock.
+  async function deleteSelectedSales() {
+    var picked = state.sales.filter(function (s) { return selectedSaleIds[s.id]; });
+    if (!picked.length) return;
+    if (!window.confirm('Delete ' + picked.length + ' sales? Their quantities will be added back to stock.')) return;
+    var failed = 0;
+    var notRestored = 0;
+    for (var i = 0; i < picked.length; i++) {
+      try {
+        var result = await api('/api/sales', 'DELETE', { id: picked[i].id });
+        if (!result.stockRestored) notRestored++;
+        delete selectedSaleIds[picked[i].id];
+      } catch (err) {
+        if (err.status === 401) { await load(); return; }
+        failed++;
+      }
+    }
+    await load();
+    if (failed) {
+      showError(failed + ' sale(s) could not be deleted. The rest were deleted.');
+    } else if (notRestored) {
+      showError('Sales deleted, but some quantities could not be added back to stock (the vegetable may no longer exist).');
+    }
   }
 
   async function deleteSale(sale) {
@@ -271,6 +326,7 @@
       ')? The sold quantity will be added back to its stock.')) return;
     try {
       var result = await api('/api/sales', 'DELETE', { id: sale.id });
+      delete selectedSaleIds[sale.id];
       await load();
       if (!result.stockRestored) {
         showError('Sale deleted, but its quantity could not be added back to stock ' +
@@ -556,6 +612,15 @@
 
   $('addBtn').addEventListener('click', openAdd);
   $('refreshBtn').addEventListener('click', load);
+  $('salesSelectAll').addEventListener('change', function (e) {
+    if (e.target.checked) {
+      state.sales.forEach(function (s) { selectedSaleIds[s.id] = true; });
+    } else {
+      selectedSaleIds = {};
+    }
+    renderSales();
+  });
+  $('salesDeleteSelected').addEventListener('click', deleteSelectedSales);
   $('searchInput').addEventListener('input', function (e) { searchQuery = e.target.value.trim().toLowerCase(); render(); });
   $('loginBtn').addEventListener('click', tryLogin);
   $('loginPassword').addEventListener('keydown', function (e) {
